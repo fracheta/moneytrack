@@ -1,0 +1,7 @@
+# MoneyTrack — Dependências
+# Tkinter já vem incluso no Python
+
+# Para Ciência de Dados e gráficos reais (próximas etapas):
+matplotlib>=3.7.0
+pandas>=2.0.0
+numpy>=1.24.0
