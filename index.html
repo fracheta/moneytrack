@@ -283,7 +283,8 @@
    MoneyTrack — lógica da aplicação
    ========================================================= */
 
-const LS_KEY = 'moneytrack_v1';
+/* Chave nova: garante início limpo (ignora dados antigos do navegador) */
+const LS_KEY = 'moneytrack_v3_clean';
 
 /* ---------- Utilidades ---------- */
 const uid = () => (window.crypto && crypto.randomUUID)
@@ -306,7 +307,7 @@ const todayISO = () => {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 };
 
-/* ---------- Estado inicial / dados de exemplo ---------- */
+/* ---------- Categorias padrão (só rótulos, sem valores) ---------- */
 function defaultCategories(){
   return [
     { id: uid(), name:'Salário',       type:'receita', color:'#22c55e' },
@@ -323,30 +324,12 @@ function defaultCategories(){
   ];
 }
 
+/* ---------- Estado inicial: categorias + ZERO transações ---------- */
 function seedData(){
-  const cats = defaultCategories();
-  const byName = (n, t) => cats.find(c => c.name === n && c.type === t).id;
-  const today = new Date();
-  const tx = [];
-
-  for (let i = 0; i < 3; i++){
-    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-    const y = d.getFullYear(), m = d.getMonth();
-    const ds = (day) => `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-
-    tx.push({ id: uid(), type:'receita', desc:'Salário mensal',  amount:4200,       catId: byName('Salário','receita'),       date: ds(5) });
-    if (i % 2 === 0)
-      tx.push({ id: uid(), type:'receita', desc:'Projeto freelance', amount:850 + i*120, catId: byName('Freelance','receita'),  date: ds(18) });
-
-    tx.push({ id: uid(), type:'despesa', desc:'Mercado do mês',   amount:680 + i*35, catId: byName('Alimentação','despesa'),   date: ds(8)  });
-    tx.push({ id: uid(), type:'despesa', desc:'Aluguel',          amount:1500,       catId: byName('Moradia','despesa'),       date: ds(10) });
-    tx.push({ id: uid(), type:'despesa', desc:'Combustível',      amount:280 + i*15, catId: byName('Transporte','despesa'),    date: ds(12) });
-    tx.push({ id: uid(), type:'despesa', desc:'Cinema e lazer',   amount:150 + i*20, catId: byName('Lazer','despesa'),         date: ds(20) });
-    if (i === 0)
-      tx.push({ id: uid(), type:'despesa', desc:'Curso online',   amount:220,        catId: byName('Educação','despesa'),      date: ds(22) });
-  }
-
-  return { categories: cats, transactions: tx };
+  return {
+    categories: defaultCategories(),
+    transactions: []                 // ← NENHUMA transação de exemplo
+  };
 }
 
 /* ---------- Persistência ---------- */
@@ -745,11 +728,10 @@ els.clearFilter.addEventListener('click', () => {
   renderTransactions();
 });
 
-/* Resetar tudo */
+/* Resetar tudo (mantém categorias padrão, zera transações) */
 els.resetAll.addEventListener('click', () => {
-  if (!confirm('Isso apagará TODAS as transações e categorias. Continuar?')) return;
+  if (!confirm('Isso apagará TODAS as transações e restaurará as categorias padrão. Continuar?')) return;
   state = seedData();
-  state.transactions = [];
   persist();
   renderAll();
 });
